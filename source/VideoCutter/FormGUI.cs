@@ -24,7 +24,15 @@ namespace VideoCutter
 		{
 			addPanelTime();
 		}
-		
+
+		private void btnRemove_Click(object sender, EventArgs e)
+		{
+			var button = (Button)sender;
+			panelTimes.Controls.Remove(button.Parent);
+			for (int i=0; i<panelTimes.Controls.Count; i++) {
+				panelTimes.Controls[i].Location = new Point(3, 3+(35*i));
+			}
+		}
 		private void addPanelTime(){
         	// 
         	// panelFirstTime
@@ -79,6 +87,7 @@ namespace VideoCutter
 	        	btnRemove.TabIndex = 5;
 	        	btnRemove.Text = "-";
 	        	btnRemove.UseVisualStyleBackColor = true;
+	        	btnRemove.Click += btnRemove_Click;
 	        	// 
 	        	// panelTime
 	        	// 
