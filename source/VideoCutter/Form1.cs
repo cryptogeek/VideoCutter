@@ -14,15 +14,18 @@ namespace VideoCutter
 {
     public partial class Form1 : Form
     {
+    	List<Panel> timePanels;
+    	
         public Form1()
         {
             InitializeComponent();
+            timePanels = new List<Panel>();
+            addPanelTime();
         }
 
         private void textBox1_DragDrop(object sender, DragEventArgs e)
         {
             string[] items = (string[])e.Data.GetData(DataFormats.FileDrop, false);
-
             foreach (string item in items)
             {
                 textBox1.Text = item;
@@ -34,51 +37,104 @@ namespace VideoCutter
             e.Effect = DragDropEffects.All;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            string to = (dateTimePicker2.Value - dateTimePicker1.Value).ToString();
-
-            string path = Path.Combine(Path.GetTempPath(), "ffmpeg.exe");
-
-            string outputFolder = Path.GetDirectoryName(textBox1.Text);
-            Console.WriteLine(outputFolder);
-            if (outputFolder.Length != 3) outputFolder = outputFolder + "\\";
-            string output;
-            int i = 10000;
-            do{
-                output =  i + ".mp4";
-                i++;
-            } while (File.Exists(outputFolder + "\\"+ output));
-
-            Console.WriteLine(outputFolder + output);
-            Process compiler = new Process();
-            compiler.StartInfo.FileName = path;
-            Console.WriteLine(" -ss " + dateTimePicker1.Value.ToString().Substring(16) + " -i \"" + textBox1.Text + "\" -to " + to + " -preset ultrafast -crf 23 -ac 2 " + "\"" + outputFolder + output + "\"");
-            compiler.StartInfo.Arguments = " -ss " + dateTimePicker1.Value.ToString().Substring(16) + " -i \"" + textBox1.Text + "\" -to " + to + " -preset ultrafast -crf 23 -ac 2 " + "\"" + outputFolder + output + "\"";
-            compiler.StartInfo.UseShellExecute = false;
-            compiler.StartInfo.RedirectStandardOutput = false;
-            compiler.StartInfo.CreateNoWindow = false;
-            compiler.Start();
-
-            //compiler.WaitForExit();
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-            string path = Path.Combine(Path.GetTempPath(), "ffmpeg.exe");
-            File.WriteAllBytes(path, VideoCutter.Properties.Resources.ffmpeg);
-        }
-
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            string path = Path.Combine(Path.GetTempPath(), "ffmpeg.exe"); 
-            File.Delete(path);
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            dateTimePicker2.Value = dateTimePicker1.Value;
-        }
-
+		private void ButtonAddTimeClick(object sender, EventArgs e)
+		{
+			addPanelTime();
+		}
+		
+		private void addPanelTime(){
+        	// 
+        	// panelFirstTime
+        	// 
+        	var panelTime = new Panel();
+        	panelTime.Location = new Point(3, 3+(35*timePanels.Count));
+        	panelTime.Name = "panelTime";
+        	panelTime.Size = new Size(201, 35);
+        	panelTime.TabIndex = 0;
+			// 
+        	// dtpInit
+        	// 
+        	var dtpInit = new DateTimePicker();
+        	dtpInit.CustomFormat = "hh:mm:ss";
+        	dtpInit.Format = DateTimePickerFormat.Time;
+        	dtpInit.Location = new Point(3, 3);
+        	dtpInit.Name = "dtpInit";
+        	dtpInit.ShowUpDown = true;
+        	dtpInit.Size = new Size(67, 20);
+        	dtpInit.TabIndex = 2;
+        	dtpInit.Value = new DateTime(2015, 8, 18, 0, 0, 0, 0);
+        	// 
+        	// dtpEnd
+        	// 
+        	var dtpEnd = new DateTimePicker();
+        	dtpEnd.CustomFormat = "hh:mm:ss";
+        	dtpEnd.Format = DateTimePickerFormat.Time;
+        	dtpEnd.Location = new Point(98, 3);
+        	dtpEnd.Name = "dtpEnd";
+        	dtpEnd.ShowUpDown = true;
+        	dtpEnd.Size = new Size(67, 20);
+        	dtpEnd.TabIndex = 3;
+        	dtpEnd.Value = new DateTime(2015, 8, 18, 0, 0, 0, 0);
+        	// 
+        	// lbTo
+        	// 
+        	var lbTo = new Label();
+        	lbTo.AutoSize = true;
+        	lbTo.Location = new System.Drawing.Point(76, 9);
+        	lbTo.Name = "lbTo";
+        	lbTo.Size = new System.Drawing.Size(16, 13);
+        	lbTo.TabIndex = 4;
+        	lbTo.Text = "to";
+        	// 
+        	// btnRemove
+        	// 
+        	var btnRemove = new Button();
+        	btnRemove.Location = new Point(171, 3);
+        	btnRemove.Name = "btnRemove";
+        	btnRemove.Size = new Size(23, 23);
+        	btnRemove.TabIndex = 5;
+        	btnRemove.Text = "-";
+        	btnRemove.UseVisualStyleBackColor = true;
+        	// 
+        	// panelTime
+        	// 
+        	panelTime.Controls.Add(btnRemove);
+        	panelTime.Controls.Add(dtpInit);
+        	panelTime.Controls.Add(dtpEnd);
+        	panelTime.Controls.Add(lbTo);
+        	panelTimes.Controls.Add(panelTime);
+        	timePanels.Add(panelTime);
+		}
+		
+		private void BtnSelectFfmpegClick(object sender, EventArgs e)
+		{
+			if (ofdFfMpeg.ShowDialog() == DialogResult.OK)
+ 			{
+				tbFfmpegLocation.Text = ofdFfMpeg.FileName;
+			}
+		}
+		
+		private void BtnCutClick(object sender, EventArgs e)
+		{
+			foreach(var timePanel in timePanels){
+        		DateTimePicker dtpInit =  timePanel.Controls.Find("dtpInit", true).FirstOrDefault() as DateTimePicker;
+        		DateTimePicker dtpEnd =  timePanel.Controls.Find("dtpEnd", true).FirstOrDefault() as DateTimePicker;
+	            string to = (dtpEnd.Value - dtpInit.Value).ToString();
+	            string path = tbFfmpegLocation.Text;
+	
+	            string outputFolder = Path.GetDirectoryName(textBox1.Text);
+	            Console.WriteLine(outputFolder);
+	            if (outputFolder.Length != 3) outputFolder = outputFolder + "\\";
+	            string output = dtpInit.Value.ToString().Substring(11).Replace(':', '-')+"_"+dtpEnd.Value.ToString().Substring(11).Replace(':', '-')+".mkv";
+	           
+		        string arguments = " -ss " + dtpInit.Value.ToString().Substring(11) + " -i \"" + textBox1.Text + "\" -to " + to + " -preset ultrafast -crf 23 -ac 2 " + "\"" + outputFolder + output + "\"";
+		
+		        var processStartInfo = new ProcessStartInfo(path, arguments);
+		        var process = new Process();
+		        process.StartInfo = processStartInfo;
+		        process.Start();
+		        process.WaitForExit();
+        	}
+		}
     }
 }
